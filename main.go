@@ -11,13 +11,13 @@ import (
 const statsUrl = "http://srv.msk01.gigacorp.local/_stats"
 
 type ServerStats struct {
-	LoadAveragePercent    int
-	MemTotalBytes         int
-	MemUsageBytes         int
-	DiskTotalBytes        int
-	DiskUsageBytes        int
-	BandwidthTotalBytesps int
-	BandwidthUsageBytesps int
+	LoadAveragePercent    int64
+	MemTotalBytes         int64
+	MemUsageBytes         int64
+	DiskTotalBytes        int64
+	DiskUsageBytes        int64
+	BandwidthTotalBytesps int64
+	BandwidthUsageBytesps int64
 }
 
 func fetchServerStats() (ServerStats, error) {
@@ -40,13 +40,13 @@ func fetchServerStats() (ServerStats, error) {
 		return ServerStats{}, fmt.Errorf("unexpected response format")
 	}
 
-	loadAverage, _ := strconv.Atoi(parts[0])
-	memTotal, _ := strconv.Atoi(parts[1])
-	memUsage, _ := strconv.Atoi(parts[2])
-	diskTotal, _ := strconv.Atoi(parts[3])
-	diskUsage, _ := strconv.Atoi(parts[4])
-	bandwidthTotal, _ := strconv.Atoi(parts[5])
-	bandwidthUsage, _ := strconv.Atoi(parts[6])
+	loadAverage, _ := strconv.ParseInt(parts[0], 10, 64)
+	memTotal, _ := strconv.ParseInt(parts[1], 10, 64)
+	memUsage, _ := strconv.ParseInt(parts[2], 10, 64)
+	diskTotal, _ := strconv.ParseInt(parts[3], 10, 64)
+	diskUsage, _ := strconv.ParseInt(parts[4], 10, 64)
+	bandwidthTotal, _ := strconv.ParseInt(parts[5], 10, 64)
+	bandwidthUsage, _ := strconv.ParseInt(parts[6], 10, 64)
 
 	return ServerStats{
 		LoadAveragePercent:    loadAverage,
@@ -70,12 +70,12 @@ func checkStats(stats ServerStats) {
 	diskUsedPercent := stats.DiskUsageBytes * 100 / stats.DiskTotalBytes
 	diskFreeMB := float64(stats.DiskTotalBytes-stats.DiskUsageBytes) / 1024 / 1024
 	if diskUsedPercent > 90 {
-		fmt.Printf("Free disk space is too low: %d Mb left\n", int(diskFreeMB))
+		fmt.Printf("Free disk space is too low: %d Mb left\n", int64(diskFreeMB))
 	}
 	bandwidthUsedPercent := stats.BandwidthUsageBytesps * 100 / stats.BandwidthTotalBytesps
 	bandwidthFreeMBps := float64(stats.BandwidthTotalBytesps-stats.BandwidthUsageBytesps) / 1024 / 1024
 	if bandwidthUsedPercent > 90 {
-		fmt.Printf("Network bandwidth usage high: %d Mbit/s available", int(bandwidthFreeMBps))
+		fmt.Printf("Network bandwidth usage high: %d Mbit/s available\n", int64(bandwidthFreeMBps))
 	}
 }
 
