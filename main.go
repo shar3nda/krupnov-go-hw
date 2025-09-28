@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const statsURL = "http://srv.msk01.gigacorp.local/_stats"
@@ -94,5 +95,6 @@ func main() {
 			errCount = 0
 		}
 		checkStats(stats)
+		time.Sleep(time.Second)
 	}
 }
