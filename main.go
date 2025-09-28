@@ -68,7 +68,7 @@ func checkStats(stats ServerStats) {
 		fmt.Printf("Memory usage too high: %d%%\n", memUsedPercent)
 	}
 	diskUsedPercent := stats.DiskUsageBytes * 100 / stats.DiskTotalBytes
-	diskFreeMB := float64(stats.DiskTotalBytes-stats.DiskUsageBytes) / 1000 / 1000
+	diskFreeMB := float64(stats.DiskTotalBytes-stats.DiskUsageBytes) / 1024 / 1024
 	if diskUsedPercent > 90 {
 		fmt.Printf("Free disk space is too low: %d Mb left\n", int64(diskFreeMB))
 	}
