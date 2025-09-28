@@ -21,24 +21,23 @@ type ServerStats struct {
 	BandwidthUsageBytesps int64
 }
 
-func fetchServerStats() (ServerStats, error) {
+func checkStats() error {
 	resp, err := http.Get(statsURL)
 	if err != nil {
-		return ServerStats{}, err
+		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return ServerStats{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return ServerStats{}, err
+		return err
 	}
 
 	parts := strings.Split(string(body), ",")
 	if len(parts) != 7 {
-		return ServerStats{}, fmt.Errorf("unexpected response format")
+		return fmt.Errorf("unexpected response format")
 	}
 
 	loadAverage, _ := strconv.ParseInt(parts[0], 10, 64)
@@ -49,7 +48,7 @@ func fetchServerStats() (ServerStats, error) {
 	bandwidthTotal, _ := strconv.ParseInt(parts[5], 10, 64)
 	bandwidthUsage, _ := strconv.ParseInt(parts[6], 10, 64)
 
-	return ServerStats{
+	stats := ServerStats{
 		LoadAveragePercent:    loadAverage,
 		MemTotalBytes:         memTotal,
 		MemUsageBytes:         memUsage,
@@ -57,10 +56,8 @@ func fetchServerStats() (ServerStats, error) {
 		DiskUsageBytes:        diskUsage,
 		BandwidthTotalBytesps: bandwidthTotal,
 		BandwidthUsageBytesps: bandwidthUsage,
-	}, nil
-}
+	}
 
-func checkStats(stats ServerStats) {
 	if stats.LoadAveragePercent > 30 {
 		fmt.Printf("Load Average is too high: %d\n", stats.LoadAveragePercent)
 	}
@@ -78,13 +75,15 @@ func checkStats(stats ServerStats) {
 	if bandwidthUsedPercent > 90 {
 		fmt.Printf("Network bandwidth usage high: %d Mbit/s available\n", int64(bandwidthFreeMBps))
 	}
+	resp.Body.Close()
+	return nil
 }
 
 func main() {
 	errCount := 0
 
 	for {
-		stats, err := fetchServerStats()
+		err := checkStats()
 		if err != nil {
 			errCount++
 			if errCount >= 3 {
@@ -94,7 +93,6 @@ func main() {
 		} else {
 			errCount = 0
 		}
-		checkStats(stats)
 		time.Sleep(time.Second)
 	}
 }
