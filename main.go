@@ -63,19 +63,19 @@ func checkStats(stats ServerStats) {
 	if stats.LoadAveragePercent > 30 {
 		fmt.Printf("Load Average is too high: %d\n", stats.LoadAveragePercent)
 	}
-	memUsedPercent := (stats.MemUsageBytes * 100) / stats.MemTotalBytes
+	memUsedPercent := stats.MemUsageBytes * 100 / stats.MemTotalBytes
 	if memUsedPercent > 80 {
 		fmt.Printf("Memory usage too high: %d%%\n", memUsedPercent)
 	}
-	diskUsedPercent := (stats.DiskUsageBytes * 100) / stats.DiskTotalBytes
-	diskFreeMB := (stats.DiskTotalBytes - stats.DiskUsageBytes) / 1024 / 1024
+	diskUsedPercent := stats.DiskUsageBytes * 100 / stats.DiskTotalBytes
+	diskFreeMB := float64(stats.DiskTotalBytes-stats.DiskUsageBytes) / 1024 / 1024
 	if diskUsedPercent > 90 {
-		fmt.Printf("Free disk space is too low: %d Mb left\n", diskFreeMB)
+		fmt.Printf("Free disk space is too low: %d Mb left\n", int(diskFreeMB))
 	}
-	bandwidthUsedPercent := (stats.BandwidthUsageBytesps * 100) / stats.BandwidthTotalBytesps
-	bandwidthFreeMBps := (stats.BandwidthTotalBytesps - stats.BandwidthUsageBytesps) / 1024 / 1024
+	bandwidthUsedPercent := stats.BandwidthUsageBytesps * 100 / stats.BandwidthTotalBytesps
+	bandwidthFreeMBps := float64(stats.BandwidthTotalBytesps-stats.BandwidthUsageBytesps) / 1024 / 1024
 	if bandwidthUsedPercent > 90 {
-		fmt.Printf("Network bandwidth usage high: %d Mbit/s available", bandwidthFreeMBps)
+		fmt.Printf("Network bandwidth usage high: %d Mbit/s available", int(bandwidthFreeMBps))
 	}
 }
 
