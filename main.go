@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-const statsUrl = "http://srv.msk01.gigacorp.local/_stats"
+const statsURL = "http://srv.msk01.gigacorp.local/_stats"
 
 type ServerStats struct {
 	LoadAveragePercent    int64
@@ -21,7 +21,7 @@ type ServerStats struct {
 }
 
 func fetchServerStats() (ServerStats, error) {
-	resp, err := http.Get(statsUrl)
+	resp, err := http.Get(statsURL)
 	if err != nil {
 		return ServerStats{}, err
 	}
