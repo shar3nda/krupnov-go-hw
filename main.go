@@ -33,8 +33,8 @@ func fetchServerStats() (ServerStats, error) {
 	resp.Body.Read(body)
 
 	parts := strings.Split(string(body), ",")
-	if len(parts) != 6 {
-		panic("Unexpected number of stats")
+	if len(parts) != 7 {
+		return ServerStats{}, fmt.Errorf("unexpected response format")
 	}
 
 	loadAverage, _ := strconv.Atoi(parts[0])
