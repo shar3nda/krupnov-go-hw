@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,7 +12,7 @@ const statsUrl = "http://srv.msk01.gigacorp.local/_stats"
 
 type ServerStats struct {
 	LoadAveragePercent    int
-	MemFreeBytes          int
+	MemTotalBytes         int
 	MemUsageBytes         int
 	DiskTotalBytes        int
 	DiskUsageBytes        int
@@ -29,8 +30,10 @@ func fetchServerStats() (ServerStats, error) {
 	}
 	defer resp.Body.Close()
 
-	var body []byte
-	resp.Body.Read(body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return ServerStats{}, err
+	}
 
 	parts := strings.Split(string(body), ",")
 	if len(parts) != 7 {
@@ -38,7 +41,7 @@ func fetchServerStats() (ServerStats, error) {
 	}
 
 	loadAverage, _ := strconv.Atoi(parts[0])
-	memFree, _ := strconv.Atoi(parts[1])
+	memTotal, _ := strconv.Atoi(parts[1])
 	memUsage, _ := strconv.Atoi(parts[2])
 	diskTotal, _ := strconv.Atoi(parts[3])
 	diskUsage, _ := strconv.Atoi(parts[4])
@@ -47,7 +50,7 @@ func fetchServerStats() (ServerStats, error) {
 
 	return ServerStats{
 		LoadAveragePercent:    loadAverage,
-		MemFreeBytes:          memFree,
+		MemTotalBytes:         memTotal,
 		MemUsageBytes:         memUsage,
 		DiskTotalBytes:        diskTotal,
 		DiskUsageBytes:        diskUsage,
@@ -60,7 +63,7 @@ func checkStats(stats ServerStats) {
 	if stats.LoadAveragePercent > 30 {
 		fmt.Printf("Load Average is too high: %d\n", stats.LoadAveragePercent)
 	}
-	memUsedPercent := (stats.MemUsageBytes * 100) / (stats.MemFreeBytes + stats.MemUsageBytes)
+	memUsedPercent := (stats.MemUsageBytes * 100) / stats.MemTotalBytes
 	if memUsedPercent > 80 {
 		fmt.Printf("Memory usage too high: %d%%\n", memUsedPercent)
 	}
