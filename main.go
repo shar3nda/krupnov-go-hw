@@ -68,12 +68,12 @@ func checkStats(stats ServerStats) {
 		fmt.Printf("Memory usage too high: %d%%\n", memUsedPercent)
 	}
 	diskUsedPercent := stats.DiskUsageBytes * 100 / stats.DiskTotalBytes
-	diskFreeMB := float64(stats.DiskTotalBytes-stats.DiskUsageBytes) / 1024 / 1024
+	diskFreeMB := float64(stats.DiskTotalBytes-stats.DiskUsageBytes) / 1000 / 1000
 	if diskUsedPercent > 90 {
 		fmt.Printf("Free disk space is too low: %d Mb left\n", int64(diskFreeMB))
 	}
 	bandwidthUsedPercent := stats.BandwidthUsageBytesps * 100 / stats.BandwidthTotalBytesps
-	bandwidthFreeMBps := float64(stats.BandwidthTotalBytesps-stats.BandwidthUsageBytesps) / 1024 / 1024
+	bandwidthFreeMBps := float64(stats.BandwidthTotalBytesps-stats.BandwidthUsageBytesps) / 1000 / 1000
 	if bandwidthUsedPercent > 90 {
 		fmt.Printf("Network bandwidth usage high: %d Mbit/s available\n", int64(bandwidthFreeMBps))
 	}
