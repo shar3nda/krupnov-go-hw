@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const statsURL = "http://srv.msk01.gigacorp.local/_stats"
@@ -59,24 +62,27 @@ func fetchServerStats() (ServerStats, error) {
 	}, nil
 }
 
-func checkStats(stats ServerStats) {
+func checkStats(stats ServerStats, w io.Writer) {
+	bw := bufio.NewWriter(w)
+	defer bw.Flush()
 	if stats.LoadAveragePercent > 30 {
-		fmt.Printf("Load Average is too high: %d\n", stats.LoadAveragePercent)
+		fmt.Fprintf(bw, "Load Average is too high: %d\n", stats.LoadAveragePercent)
 	}
 	memUsedPercent := stats.MemUsageBytes * 100 / stats.MemTotalBytes
 	if memUsedPercent > 80 {
-		fmt.Printf("Memory usage too high: %d%%\n", memUsedPercent)
+		fmt.Fprintf(bw, "Memory usage too high: %d%%\n", memUsedPercent)
 	}
 	diskUsedPercent := stats.DiskUsageBytes * 100 / stats.DiskTotalBytes
 	diskFreeMB := float64(stats.DiskTotalBytes-stats.DiskUsageBytes) / 1024 / 1024
 	if diskUsedPercent > 90 {
-		fmt.Printf("Free disk space is too low: %d Mb left\n", int64(diskFreeMB))
+		fmt.Fprintf(bw, "Free disk space is too low: %d Mb left\n", int64(diskFreeMB))
 	}
 	bandwidthUsedPercent := stats.BandwidthUsageBytesps * 100 / stats.BandwidthTotalBytesps
 	bandwidthFreeMBps := float64(stats.BandwidthTotalBytesps-stats.BandwidthUsageBytesps) / 1000 / 1000
 	if bandwidthUsedPercent > 90 {
-		fmt.Printf("Network bandwidth usage high: %d Mbit/s available\n", int64(bandwidthFreeMBps))
+		fmt.Fprintf(bw, "Network bandwidth usage high: %d Mbit/s available\n", int64(bandwidthFreeMBps))
 	}
+	time.Sleep(20 * time.Millisecond)
 }
 
 func main() {
@@ -93,6 +99,6 @@ func main() {
 		} else {
 			errCount = 0
 		}
-		checkStats(stats)
+		checkStats(stats, os.Stdout)
 	}
 }
