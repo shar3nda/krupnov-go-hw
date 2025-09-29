@@ -34,6 +34,10 @@ func checkStats() error {
 	if err != nil {
 		return err
 	}
+	defer func() {
+		time.Sleep(time.Second)
+		resp.Body.Close()
+	}()
 
 	parts := strings.Split(string(body), ",")
 	if len(parts) != 7 {
@@ -75,7 +79,6 @@ func checkStats() error {
 	if bandwidthUsedPercent > 90 {
 		fmt.Printf("Network bandwidth usage high: %d Mbit/s available\n", int64(bandwidthFreeMBps))
 	}
-	resp.Body.Close()
 	return nil
 }
 
@@ -93,6 +96,5 @@ func main() {
 		} else {
 			errCount = 0
 		}
-		time.Sleep(time.Second)
 	}
 }
