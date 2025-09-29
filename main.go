@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 )
 
 const statsURL = "http://srv.msk01.gigacorp.local/_stats"
@@ -21,27 +20,24 @@ type ServerStats struct {
 	BandwidthUsageBytesps int64
 }
 
-func checkStats() error {
+func fetchServerStats() (ServerStats, error) {
 	resp, err := http.Get(statsURL)
 	if err != nil {
-		return err
+		return ServerStats{}, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return ServerStats{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
+	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return ServerStats{}, err
 	}
-	defer func() {
-		time.Sleep(time.Second)
-		resp.Body.Close()
-	}()
 
 	parts := strings.Split(string(body), ",")
 	if len(parts) != 7 {
-		return fmt.Errorf("unexpected response format")
+		return ServerStats{}, fmt.Errorf("unexpected response format")
 	}
 
 	loadAverage, _ := strconv.ParseInt(parts[0], 10, 64)
@@ -52,7 +48,7 @@ func checkStats() error {
 	bandwidthTotal, _ := strconv.ParseInt(parts[5], 10, 64)
 	bandwidthUsage, _ := strconv.ParseInt(parts[6], 10, 64)
 
-	stats := ServerStats{
+	return ServerStats{
 		LoadAveragePercent:    loadAverage,
 		MemTotalBytes:         memTotal,
 		MemUsageBytes:         memUsage,
@@ -60,8 +56,10 @@ func checkStats() error {
 		DiskUsageBytes:        diskUsage,
 		BandwidthTotalBytesps: bandwidthTotal,
 		BandwidthUsageBytesps: bandwidthUsage,
-	}
+	}, nil
+}
 
+func checkStats(stats ServerStats) {
 	if stats.LoadAveragePercent > 30 {
 		fmt.Printf("Load Average is too high: %d\n", stats.LoadAveragePercent)
 	}
@@ -79,14 +77,13 @@ func checkStats() error {
 	if bandwidthUsedPercent > 90 {
 		fmt.Printf("Network bandwidth usage high: %d Mbit/s available\n", int64(bandwidthFreeMBps))
 	}
-	return nil
 }
 
 func main() {
 	errCount := 0
 
 	for {
-		err := checkStats()
+		stats, err := fetchServerStats()
 		if err != nil {
 			errCount++
 			if errCount >= 3 {
@@ -96,5 +93,6 @@ func main() {
 		} else {
 			errCount = 0
 		}
+		checkStats(stats)
 	}
 }
