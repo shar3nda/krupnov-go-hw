@@ -6,8 +6,10 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -87,18 +89,30 @@ func checkStats(stats ServerStats, w io.Writer) {
 
 func main() {
 	errCount := 0
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+	shouldStop := false
 
 	for {
+		select {
+		case <-sigCh:
+			shouldStop = true
+		default:
+		}
+
 		stats, err := fetchServerStats()
 		if err != nil {
 			errCount++
 			if errCount >= 3 {
 				fmt.Println("Unable to fetch server statistic")
 			}
-			continue
 		} else {
 			errCount = 0
+			checkStats(stats, os.Stdout)
 		}
-		checkStats(stats, os.Stdout)
+
+		if shouldStop {
+			return
+		}
 	}
 }
